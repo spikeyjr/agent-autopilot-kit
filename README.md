@@ -8,6 +8,8 @@ Run Claude Code on a schedule (cron) with guards against **stray API keys, overl
 A small kit (bash + Python stdlib + SQLite, no pip packages) that turns `claude -p` into a
 resumable background worker on Linux. Needs `python3`, `flock`, `timeout`, cron and the `claude` CLI.
 
+Background and rationale: [How to run Claude Code on cron without surprise bills or burned limits](docs/run-claude-code-on-cron.md).
+
 ## Safeguards
 
 | Safeguard | How |
