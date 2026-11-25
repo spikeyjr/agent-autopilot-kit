@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": ["Read", "Edit", "Write", "Glob", "Grep", "WebSearch", "WebFetch", "Bash"],
+    "deny": [
+      "Bash(sudo:*)", "Bash(su:*)", "Bash(rm -rf /:*)", "Bash(rm -rf ~:*)", "Bash(crontab:*)",
+      "Bash(git push:*)", "Bash(gh:*)", "Bash(ssh:*)", "Bash(scp:*)", "Bash(npm publish:*)",
+      "Bash(docker:*)", "Read(~/.claude.json)", "Read(~/.claude/.credentials.json)",
+      "Read(./state/secrets.env)"
+    ]
+  }
+}
