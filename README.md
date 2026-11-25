@@ -85,6 +85,13 @@ ops/agent_settings.json permissions for scheduled sessions
 - Pause now: `echo $(( $(date +%s) + 86400 )) > state/pause_until`
 - Stop: `touch state/STOP` · Uninstall: remove the `claude-autopilot` block from `crontab -e`
 
+## Setup guide + templates (optional, paid)
+
+Everything above works on its own. If you want a head start, the
+[Agent Autopilot Kit](https://spikeyjr.gumroad.com/l/agent-autopilot-kit?layout=profile) ($19) adds a setup
+and operations guide (billing sources, schedule sizing per plan, troubleshooting) plus ready-to-edit
+AGENTS.md / TASKS.md templates. Buying it is how this project is funded.
+
 ## License
 
 MIT
