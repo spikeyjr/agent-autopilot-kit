@@ -54,12 +54,13 @@ and a kill file (`touch state/STOP`).
 
 Most "agent" chores are deterministic: syncing data, rotating logs, checking a status page. Run them from a
 plain cron tick (here: `ops/ops_tick.py` every 15 minutes, plus `ops/hooks/*.py`) so they keep working even
-when you're out of usage, and reserve `claude -p` for work that needs judgment.
+when you're out of usage, and reserve `claude -p` for work that needs judgment. Lock this tick too: if its jobs
+can outlast the interval, a second copy starts alongside the first and may repeat their actions.
 
 ## 6. Test the guards without spending usage
 
 Put a stub `claude` first on `PATH` that prints canned JSON (success, limit message, error, slow run),
-then assert on the launcher's log. That is what `ops/selftest.sh` does: 13 checks, zero usage.
+then assert on the launcher's log. That is what `ops/selftest.sh` does, with zero usage.
 
 ## Install
 

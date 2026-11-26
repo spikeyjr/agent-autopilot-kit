@@ -1,6 +1,8 @@
 # Changelog
 
 ## 2026-11-26
+- Fix: the no-AI ops tick had no lock, so slow hooks running past the 15-minute interval could run twice at once
+  (duplicate actions). A second tick now logs SKIP and exits. New selftest check.
 - Fix: if the ledger could not be read (corrupted or failing database) while a profit target was set, the stop check
   reported "target reached" and created `state/STOP`, halting the agent for good. It now skips that run and re-checks
   next time. New selftest check.

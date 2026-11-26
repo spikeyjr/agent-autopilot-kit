@@ -39,4 +39,7 @@ mkdir -p "$T/ops/hooks"; rm -f "$T/state/status.json"
 echo 'import time; time.sleep(5)' > "$T/ops/hooks/10_slow.py"
 echo 'open("state/second_hook_ran","w").close()' > "$T/ops/hooks/20_next.py"
 HOOK_TIMEOUT=1 python3 "$T/ops/ops_tick.py" 2>"$T/tick.err" && [ -f "$T/state/second_hook_ran" ] && [ -f "$T/state/status.json" ] && grep -q "10_slow.py TIMEOUT" "$T/logs/ops.log" && { echo "PASS hung hook does not stop the ops tick"; pass=$((pass+1)); } || { echo "FAIL hook timeout"; tail -1 "$T/tick.err"; fail=$((fail+1)); }
+rm -f "$T"/ops/hooks/*.py; echo 'import time; open("state/hook_runs","a").write("x"); time.sleep(3)' > "$T/ops/hooks/10_slow.py"
+python3 "$T/ops/ops_tick.py" & sleep 1; python3 "$T/ops/ops_tick.py"; wait
+[ "$(cat "$T/state/hook_runs" 2>/dev/null)" = x ] && grep -q "SKIP overlap: another ops tick" "$T/logs/ops.log" && { echo "PASS overlapping ops tick skipped"; pass=$((pass+1)); } || { echo "FAIL ops tick overlap"; fail=$((fail+1)); }
 echo "selftest: $pass passed, $fail failed"; [ $fail -eq 0 ]

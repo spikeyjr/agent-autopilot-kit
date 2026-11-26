@@ -15,7 +15,7 @@ Background and rationale: [How to run Claude Code on cron without surprise bills
 | Safeguard | How |
 |---|---|
 | Stray API keys ignored | Launcher unsets `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` so runs use your plan login (check `apiKeyHelper` and cloud-provider settings yourself) |
-| No overlapping runs | `flock` lock — a second run exits immediately |
+| No overlapping runs | `flock` locks for AI sessions and for the no-AI ops tick — a second run exits immediately |
 | Respects usage limits | Detects usage/rate-limit messages on failed runs → pauses 5h → **never retries** |
 | Error backoff | Failed run → 1h pause, full output saved to `logs/last_session.json` |
 | Daily budget | `MAX_AI_RUNS_PER_DAY` hard cap |
@@ -26,7 +26,7 @@ Background and rationale: [How to run Claude Code on cron without surprise bills
 | Scoped permissions | `ops/agent_settings.json` denies sudo, git push, crontab edits, credential reads |
 | Audit trail | SQLite ledger of actions (and money, if you track it) + plain-text logs |
 
-`ops/selftest.sh` tests the launcher, stop checks and hook timeout against a **stub** `claude` (zero usage). It does
+`ops/selftest.sh` tests the launcher, stop checks, hook timeout and tick overlap against a **stub** `claude` (zero usage). It does
 not test reboot behavior or the permission rules. Those rules are guardrails, **not a sandbox**: shell
 access is allowed, so run the agent as an unprivileged user with nothing sensitive in reach.
 

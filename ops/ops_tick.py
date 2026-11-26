@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """Deterministic (no-AI) operations tick: health, stop checks, status snapshot. Runs every 15 min + @reboot."""
-import subprocess, os, datetime, json, glob
+import subprocess, os, sys, datetime, json, glob, fcntl
 D = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(D)
 HOOK_TIMEOUT = int(os.environ.get("HOOK_TIMEOUT", "300"))
 ts = datetime.datetime.now().isoformat(timespec="seconds")
+# Slow hooks can outlast the 15-min interval (or collide with @reboot): never run two ticks at once.
+lock = open("state/ops.lock", "w")  # held until this process exits
+try: fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except BlockingIOError:
+    with open("logs/ops.log", "a") as f: f.write(f"{ts} SKIP overlap: another ops tick is running\n")
+    sys.exit(0)
 guard = subprocess.run(["ops/guard.sh"], capture_output=True, text=True)
 money = subprocess.run(["python3", "ops/ledger.py", "summary"], capture_output=True, text=True).stdout.strip()
 pause = open("state/pause_until").read().strip() if os.path.exists("state/pause_until") else "0"
