@@ -59,7 +59,7 @@ when you're out of usage, and reserve `claude -p` for work that needs judgment.
 ## 6. Test the guards without spending usage
 
 Put a stub `claude` first on `PATH` that prints canned JSON (success, limit message, error, slow run),
-then assert on the launcher's log. That is what `ops/selftest.sh` does: 12 checks, zero usage.
+then assert on the launcher's log. That is what `ops/selftest.sh` does: 13 checks, zero usage.
 
 ## Install
 

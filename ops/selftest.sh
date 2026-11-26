@@ -32,4 +32,8 @@ AGENT_PROMPT=x run; chk "unarmed test invocation ignored" "SKIP test invocation"
 python3 "$T/ops/ledger.py" revenue 120 test selftest >/dev/null; run; chk "profit target stop" "target reached"; rm -f "$T/state/STOP" "$T/state/ledger.db"
 sed -i 's/^MISSION_END=.*/MISSION_END=2000-01-01/' "$T/ops/config.env"; run; chk "30-day deadline stop" "mission ended"
 python3 "$T/ops/ops_tick.py" && grep -q '"may_run": false' "$T/state/status.json" && { echo "PASS ops tick (no AI) reports stop"; pass=$((pass+1)); } || { echo "FAIL ops tick"; fail=$((fail+1)); }
+mkdir -p "$T/ops/hooks"; rm -f "$T/state/status.json"
+echo 'import time; time.sleep(5)' > "$T/ops/hooks/10_slow.py"
+echo 'open("state/second_hook_ran","w").close()' > "$T/ops/hooks/20_next.py"
+HOOK_TIMEOUT=1 python3 "$T/ops/ops_tick.py" 2>"$T/tick.err" && [ -f "$T/state/second_hook_ran" ] && [ -f "$T/state/status.json" ] && grep -q "10_slow.py TIMEOUT" "$T/logs/ops.log" && { echo "PASS hung hook does not stop the ops tick"; pass=$((pass+1)); } || { echo "FAIL hook timeout"; tail -1 "$T/tick.err"; fail=$((fail+1)); }
 echo "selftest: $pass passed, $fail failed"; [ $fail -eq 0 ]

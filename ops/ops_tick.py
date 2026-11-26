@@ -3,14 +3,19 @@
 import subprocess, os, datetime, json, glob
 D = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(D)
+HOOK_TIMEOUT = int(os.environ.get("HOOK_TIMEOUT", "300"))
 ts = datetime.datetime.now().isoformat(timespec="seconds")
 guard = subprocess.run(["ops/guard.sh"], capture_output=True, text=True)
 money = subprocess.run(["python3", "ops/ledger.py", "summary"], capture_output=True, text=True).stdout.strip()
 pause = open("state/pause_until").read().strip() if os.path.exists("state/pause_until") else "0"
-# Put deterministic jobs in ops/hooks/*.py; each runs every tick with a 300s timeout.
+# Put deterministic jobs in ops/hooks/*.py; each runs every tick; one that exceeds HOOK_TIMEOUT (300s) is killed.
 for hook in sorted(glob.glob("ops/hooks/*.py")):
-    r = subprocess.run(["python3", "-I", hook], capture_output=True, text=True, timeout=300)
-    with open("logs/ops.log", "a") as f: f.write(f"{ts} HOOK {hook} rc={r.returncode} {r.stdout[-300:]} {r.stderr[-300:]}\n")
+    try:
+        r = subprocess.run(["python3", "-I", hook], capture_output=True, text=True, errors="replace", timeout=HOOK_TIMEOUT)
+        line = f"{hook} rc={r.returncode} {r.stdout[-300:]} {r.stderr[-300:]}"
+    except subprocess.TimeoutExpired:  # a hung hook must not stop later hooks or the status snapshot
+        line = f"{hook} TIMEOUT after {HOOK_TIMEOUT}s (killed)"
+    with open("logs/ops.log", "a") as f: f.write(f"{ts} HOOK {line}\n")
 status = {"ts": ts, "may_run": guard.returncode == 0, "guard": guard.stdout.strip(), "ledger": money,
           "paused_until": datetime.datetime.fromtimestamp(int(pause)).isoformat() if int(pause) else None}
 json.dump(status, open("state/status.json", "w"), indent=1)

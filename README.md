@@ -22,11 +22,11 @@ Background and rationale: [How to run Claude Code on cron without surprise bills
 | Bounded sessions | `--max-turns` + 45-minute `timeout` |
 | Stop conditions | End date, optional ledger target, or `touch state/STOP` |
 | Survives reboots | cron `@reboot` + all state on disk; no daemon to babysit |
-| Works without AI | `ops_tick.py` runs every 15 min with zero inference and runs your `ops/hooks/*.py` |
+| Works without AI | `ops_tick.py` runs every 15 min with zero inference and runs your `ops/hooks/*.py`; a hung hook is killed after `HOOK_TIMEOUT` (300s) and the rest still run |
 | Scoped permissions | `ops/agent_settings.json` denies sudo, git push, crontab edits, credential reads |
 | Audit trail | SQLite ledger of actions (and money, if you track it) + plain-text logs |
 
-`ops/selftest.sh` tests the launcher and stop checks against a **stub** `claude` (zero usage). It does
+`ops/selftest.sh` tests the launcher, stop checks and hook timeout against a **stub** `claude` (zero usage). It does
 not test reboot behavior or the permission rules. Those rules are guardrails, **not a sandbox**: shell
 access is allowed, so run the agent as an unprivileged user with nothing sensitive in reach.
 
