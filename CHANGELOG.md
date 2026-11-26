@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2026-11-26
+- Fix: if the ledger could not be read (corrupted or failing database) while a profit target was set, the stop check
+  reported "target reached" and created `state/STOP`, halting the agent for good. It now skips that run and re-checks
+  next time. New selftest check.
 - Fix: a hook running past the 300s timeout crashed the ops tick (later hooks skipped, status.json stale). It is now
   killed and logged as TIMEOUT, and the tick continues. Non-UTF-8 hook output no longer crashes it. New selftest check.
 - docs/run-claude-code-on-cron.md: guide to the four failure modes of scheduled `claude -p` and their guards.

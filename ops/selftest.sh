@@ -30,6 +30,9 @@ echo fail > "$T/mode"; run; chk "error -> backoff" "ERROR rc=2"; rm -f "$T/state
 echo 4 > "$T/state/runs_$(date +%F)"; echo ok > "$T/mode"; run; chk "daily cap" "SKIP daily cap"; rm "$T/state/runs_$(date +%F)"
 AGENT_PROMPT=x run; chk "unarmed test invocation ignored" "SKIP test invocation"
 python3 "$T/ops/ledger.py" revenue 120 test selftest >/dev/null; run; chk "profit target stop" "target reached"; rm -f "$T/state/STOP" "$T/state/ledger.db"
+echo "not a database, just a corrupted file" > "$T/state/ledger.db"; run
+grep -q "SKIP guard: ledger unreadable" "$L" && [ ! -f "$T/state/STOP" ] && { echo "PASS unreadable ledger skips the run without a permanent stop"; pass=$((pass+1)); } || { echo "FAIL unreadable ledger"; tail -3 "$L"; fail=$((fail+1)); }
+: > "$L"; rm -f "$T/state/STOP" "$T/state/ledger.db"
 sed -i 's/^MISSION_END=.*/MISSION_END=2000-01-01/' "$T/ops/config.env"; run; chk "30-day deadline stop" "mission ended"
 python3 "$T/ops/ops_tick.py" && grep -q '"may_run": false' "$T/state/status.json" && { echo "PASS ops tick (no AI) reports stop"; pass=$((pass+1)); } || { echo "FAIL ops tick"; fail=$((fail+1)); }
 mkdir -p "$T/ops/hooks"; rm -f "$T/state/status.json"
