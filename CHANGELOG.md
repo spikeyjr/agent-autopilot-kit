@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-27
+- Fix: a typo in `ops/config.env` could stop the agent for good or ignore the deadline. `PROFIT_TARGET=1,000` or an
+  empty value was reported as "target reached" and created `state/STOP`; `MISSION_END=12/31/2099` read as already
+  ended; a day-first date such as `31-12-2000` never expired. Invalid values now skip the run, log the reason, and
+  resume once fixed. New selftest check.
+
 ## 2026-11-26
 - Fix: the no-AI ops tick had no lock, so slow hooks running past the 15-minute interval could run twice at once
   (duplicate actions). A second tick now logs SKIP and exits. New selftest check.
