@@ -9,6 +9,7 @@ A small kit (bash + Python stdlib + SQLite, no pip packages) that turns `claude 
 resumable background worker on Linux. Needs `python3`, `flock`, `timeout`, cron and the `claude` CLI.
 
 Background and rationale: [How to run Claude Code on cron without surprise bills or burned limits](docs/run-claude-code-on-cron.md).
+Job not firing? [Claude Code cron troubleshooting](docs/cron-troubleshooting.md).
 
 ## Safeguards
 
@@ -84,6 +85,7 @@ ops/agent_settings.json permissions for scheduled sessions
 
 - Status: `ops/status.sh` (read-only: stop file, pause, runs today, running session, cron entry, recent log)
 - Logs: `tail logs/agent.log`
+- Not running? [Cron troubleshooting by log message](docs/cron-troubleshooting.md)
 - Pause now: `echo $(( $(date +%s) + 86400 )) > state/pause_until`
 - Stop: `touch state/STOP` · Uninstall: remove the `claude-autopilot` block from `crontab -e`
 

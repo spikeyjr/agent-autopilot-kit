@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-11-27
+- docs/cron-troubleshooting.md: diagnose a scheduled run from its log line (PATH, SKIP reasons, exit codes, hooks).
 - New: `ops/status.sh`, a read-only one-screen summary (stop file, pause, runs today, end date, running session,
   cron entry, last ops tick, recent launcher log). New selftest check.
 - Fix: a typo in `ops/config.env` could stop the agent for good or ignore the deadline. `PROFIT_TARGET=1,000` or an
