@@ -1,6 +1,8 @@
 # Changelog
 
 ## 2026-11-27
+- New: `ops/status.sh`, a read-only one-screen summary (stop file, pause, runs today, end date, running session,
+  cron entry, last ops tick, recent launcher log). New selftest check.
 - Fix: a typo in `ops/config.env` could stop the agent for good or ignore the deadline. `PROFIT_TARGET=1,000` or an
   empty value was reported as "target reached" and created `state/STOP`; `MISSION_END=12/31/2099` read as already
   ended; a day-first date such as `31-12-2000` never expired. Invalid values now skip the run, log the reason, and

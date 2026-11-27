@@ -49,4 +49,14 @@ HOOK_TIMEOUT=1 python3 "$T/ops/ops_tick.py" 2>"$T/tick.err" && [ -f "$T/state/se
 rm -f "$T"/ops/hooks/*.py; echo 'import time; open("state/hook_runs","a").write("x"); time.sleep(3)' > "$T/ops/hooks/10_slow.py"
 python3 "$T/ops/ops_tick.py" & sleep 1; python3 "$T/ops/ops_tick.py"; wait
 [ "$(cat "$T/state/hook_runs" 2>/dev/null)" = x ] && grep -q "SKIP overlap: another ops tick" "$T/logs/ops.log" && { echo "PASS overlapping ops tick skipped"; pass=$((pass+1)); } || { echo "FAIL ops tick overlap"; fail=$((fail+1)); }
+# status.sh: reports each blocker and changes nothing (stub crontab: the real one is never read)
+printf '#!/bin/sh\nexit 1\n' > "$T/bin/crontab"; chmod +x "$T/bin/crontab"
+rm -f "$T/state/STOP"; echo 2 > "$T/state/runs_$(date +%F)"; echo $(( $(date +%s) + 3600 )) > "$T/state/pause_until"
+snap(){ (cd "$T" && find state logs -type f -exec cksum {} + | sort); }
+before=$(snap); a=$("$T/ops/status.sh"); after=$(snap)
+touch "$T/state/STOP"; echo 1 > "$T/state/pause_until"
+flock "$T/state/agent.lock" sleep 2 & sleep 1; b=$("$T/ops/status.sh"); wait
+if [ "$before" = "$after" ] && grep -q "stop file: *none" <<<"$a" && grep -q "pause: *until" <<<"$a" && grep -q "runs today: *2/4" <<<"$a" && grep -q "session: *not running" <<<"$a" \
+   && grep -q "stop file: *PRESENT" <<<"$b" && grep -q "pause: *none" <<<"$b" && grep -q "session: *running" <<<"$b"; then
+  echo "PASS status reports blockers without changing state"; pass=$((pass+1)); else echo "FAIL status"; printf '%s\n---\n%s\n' "$a" "$b"; fail=$((fail+1)); fi
 echo "selftest: $pass passed, $fail failed"; [ $fail -eq 0 ]

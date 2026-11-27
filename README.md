@@ -26,7 +26,7 @@ Background and rationale: [How to run Claude Code on cron without surprise bills
 | Scoped permissions | `ops/agent_settings.json` denies sudo, git push, crontab edits, credential reads |
 | Audit trail | SQLite ledger of actions (and money, if you track it) + plain-text logs |
 
-`ops/selftest.sh` tests the launcher, stop checks, hook timeout and tick overlap against a **stub** `claude` (zero usage). It does
+`ops/selftest.sh` tests the launcher, stop checks, hook timeout, tick overlap and status report against a **stub** `claude` (zero usage). It does
 not test reboot behavior or the permission rules. Those rules are guardrails, **not a sandbox**: shell
 access is allowed, so run the agent as an unprivileged user with nothing sensitive in reach.
 
@@ -76,12 +76,14 @@ ops/guard.sh           stop/deadline/target checks
 ops/ops_tick.py        no-AI tick + hooks runner + status.json
 ops/ledger.py          SQLite actions/revenue/expense ledger
 ops/selftest.sh        safeguard tests with stub claude
+ops/status.sh          one-screen "why isn't it running?" summary
 ops/agent_settings.json permissions for scheduled sessions
 ```
 
 ## Operating
 
-- Status: `cat state/status.json` · Logs: `tail logs/agent.log`
+- Status: `ops/status.sh` (read-only: stop file, pause, runs today, running session, cron entry, recent log)
+- Logs: `tail logs/agent.log`
 - Pause now: `echo $(( $(date +%s) + 86400 )) > state/pause_until`
 - Stop: `touch state/STOP` · Uninstall: remove the `claude-autopilot` block from `crontab -e`
 
