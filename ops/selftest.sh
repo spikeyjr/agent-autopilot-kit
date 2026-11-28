@@ -34,9 +34,11 @@ echo "not a database, just a corrupted file" > "$T/state/ledger.db"; run
 grep -q "SKIP guard: ledger unreadable" "$L" && [ ! -f "$T/state/STOP" ] && { echo "PASS unreadable ledger skips the run without a permanent stop"; pass=$((pass+1)); } || { echo "FAIL unreadable ledger"; tail -3 "$L"; fail=$((fail+1)); }
 : > "$L"; rm -f "$T/state/STOP" "$T/state/ledger.db"
 cp "$T/ops/config.env" "$T/config.good"; bad=0
-for kv in MISSION_END=12/31/2099 MISSION_END=31-12-2000 MISSION_END= PROFIT_TARGET=1,000 PROFIT_TARGET=; do
+for kv in MISSION_END=12/31/2099 MISSION_END=31-12-2000 MISSION_END= PROFIT_TARGET=1,000 PROFIT_TARGET= \
+          RATE_LIMIT_PAUSE_SECONDS=5h RATE_LIMIT_PAUSE_SECONDS= RATE_LIMIT_PAUSE_SECONDS=0 ERROR_PAUSE_SECONDS=1h \
+          ERROR_PAUSE_SECONDS=08 MAX_AI_RUNS_PER_DAY=three MAX_AI_RUNS_PER_DAY=; do
   sed -i "s|^${kv%%=*}=.*|$kv|" "$T/ops/config.env"; run
-  grep -q "SKIP guard: invalid ${kv%%=*}" "$L" && [ ! -f "$T/state/STOP" ] || { echo "  not handled: $kv -> $(tail -1 "$L")"; bad=1; }
+  grep -q "SKIP guard: invalid ${kv%%=*}" "$L" && ! grep -q "START session" "$L" && [ ! -f "$T/state/STOP" ] || { echo "  not handled: $kv -> $(tail -1 "$L")"; bad=1; }
   : > "$L"; rm -f "$T/state/STOP" "$T/state/runs_$(date +%F)"; cp "$T/config.good" "$T/ops/config.env"
 done
 [ $bad = 0 ] && { echo "PASS config typo skips the run without a permanent stop"; pass=$((pass+1)); } || { echo "FAIL config typo"; fail=$((fail+1)); }

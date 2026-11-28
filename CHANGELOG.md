@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2026-11-28
+- Fix: a pause length such as `5h`, a word or an empty value in `ops/config.env` left no pause after a usage-limit
+  message or error, so the next cron run tried again; a non-numeric or empty `MAX_AI_RUNS_PER_DAY` disabled the daily
+  cap. Such values now skip the run and log which setting to fix. Selftest cases added.
 - Fix: a `state/pause_until` that was empty or not epoch seconds (for example a hand-written date) did not pause
   anything: the launcher printed a shell error and started the session, and the ops tick crashed. Such a file now
   holds the agent, logs the reason, and `ops/status.sh` shows it as INVALID. New selftest check.
