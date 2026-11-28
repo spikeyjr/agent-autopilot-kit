@@ -40,6 +40,17 @@ for kv in MISSION_END=12/31/2099 MISSION_END=31-12-2000 MISSION_END= PROFIT_TARG
   : > "$L"; rm -f "$T/state/STOP" "$T/state/runs_$(date +%F)"; cp "$T/config.good" "$T/ops/config.env"
 done
 [ $bad = 0 ] && { echo "PASS config typo skips the run without a permanent stop"; pass=$((pass+1)); } || { echo "FAIL config typo"; fail=$((fail+1)); }
+# a pause file that cannot be read as an epoch must hold the agent, not be ignored
+bad=0; echo ok > "$T/mode"
+for v in "" "tomorrow 5pm" "2099-01-01"; do
+  echo "$v" > "$T/state/pause_until"; rm -f "$T/state/status.json" "$T/state/runs_$(date +%F)"; run
+  grep -q "SKIP guard: invalid state/pause_until" "$L" && ! grep -q "START session" "$L" || { echo "  ran or wrong log for '$v': $(tail -1 "$L")"; bad=1; }
+  python3 "$T/ops/ops_tick.py" 2>"$T/tick.err" && grep -q '"may_run": false' "$T/state/status.json" && grep -q "invalid state/pause_until" "$T/state/status.json" || { echo "  ops tick for '$v': $(tail -1 "$T/tick.err")"; bad=1; }
+  grep -q "pause: *INVALID" <<<"$("$T/ops/status.sh")" || { echo "  status.sh for '$v'"; bad=1; }
+  : > "$L"
+done
+rm -f "$T/state/pause_until" "$T/state/runs_$(date +%F)"
+[ $bad = 0 ] && { echo "PASS unreadable pause file holds the agent"; pass=$((pass+1)); } || { echo "FAIL unreadable pause file"; fail=$((fail+1)); }
 sed -i 's/^MISSION_END=.*/MISSION_END=2000-01-01/' "$T/ops/config.env"; run; chk "30-day deadline stop" "mission ended"
 python3 "$T/ops/ops_tick.py" && grep -q '"may_run": false' "$T/state/status.json" && { echo "PASS ops tick (no AI) reports stop"; pass=$((pass+1)); } || { echo "FAIL ops tick"; fail=$((fail+1)); }
 mkdir -p "$T/ops/hooks"; rm -f "$T/state/status.json"

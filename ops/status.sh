@@ -4,7 +4,8 @@ D="$(cd "$(dirname "$0")/.." && pwd)"; cd "$D" || exit 1; source ops/config.env
 row(){ printf '%-14s %s\n' "$1:" "$2"; }
 if [ -f state/STOP ]; then row "stop file" "PRESENT (no runs until you delete state/STOP)"; else row "stop file" "none"; fi
 p=$(cat state/pause_until 2>/dev/null)
-if [[ "$p" =~ ^[0-9]+$ ]] && [ "$(date +%s)" -lt "$p" ]; then row "pause" "until $(date -d "@$p" '+%F %R')"; else row "pause" "none"; fi
+if [ -e state/pause_until ] && ! [[ "$p" =~ ^[0-9]{1,11}$ ]]; then row "pause" "INVALID state/pause_until (no runs until fixed or deleted)"
+elif [ -n "$p" ] && [ "$(date +%s)" -lt "$p" ]; then row "pause" "until $(date -d "@$p" '+%F %R')"; else row "pause" "none"; fi
 row "runs today" "$(cat "state/runs_$(date +%F)" 2>/dev/null || echo 0)/$MAX_AI_RUNS_PER_DAY"
 row "end date" "$MISSION_END"
 # Read /proc/locks instead of trying the lock: a probe could make a run starting right now skip itself.

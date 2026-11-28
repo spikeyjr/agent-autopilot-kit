@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Deterministic (no-AI) operations tick: health, stop checks, status snapshot. Runs every 15 min + @reboot."""
-import subprocess, os, sys, datetime, json, glob, fcntl
+import subprocess, os, sys, datetime, json, glob, fcntl, re
 D = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(D)
 HOOK_TIMEOUT = int(os.environ.get("HOOK_TIMEOUT", "300"))
@@ -13,7 +13,8 @@ except BlockingIOError:
     sys.exit(0)
 guard = subprocess.run(["ops/guard.sh"], capture_output=True, text=True)
 money = subprocess.run(["python3", "ops/ledger.py", "summary"], capture_output=True, text=True).stdout.strip()
-pause = open("state/pause_until").read().strip() if os.path.exists("state/pause_until") else "0"
+pause = open("state/pause_until").read().strip() if os.path.isfile("state/pause_until") else "0"
+pause = int(pause) if re.fullmatch(r"[0-9]{1,11}", pause) else 0  # invalid values: guard reports them
 # Put deterministic jobs in ops/hooks/*.py; each runs every tick; one that exceeds HOOK_TIMEOUT (300s) is killed.
 for hook in sorted(glob.glob("ops/hooks/*.py")):
     try:
@@ -23,7 +24,7 @@ for hook in sorted(glob.glob("ops/hooks/*.py")):
         line = f"{hook} TIMEOUT after {HOOK_TIMEOUT}s (killed)"
     with open("logs/ops.log", "a") as f: f.write(f"{ts} HOOK {line}\n")
 status = {"ts": ts, "may_run": guard.returncode == 0, "guard": guard.stdout.strip(), "ledger": money,
-          "paused_until": datetime.datetime.fromtimestamp(int(pause)).isoformat() if int(pause) else None}
+          "paused_until": datetime.datetime.fromtimestamp(pause).isoformat() if pause else None}
 json.dump(status, open("state/status.json", "w"), indent=1)
 with open("logs/ops.log", "a") as f: f.write(f"{ts} OPS {json.dumps(status)}\n")
 # keep logs bounded

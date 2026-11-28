@@ -42,6 +42,7 @@ versions with a version manager), run `./install.sh` again.
 | `SKIP guard: mission ended …` | Past `MISSION_END`; this also creates `state/STOP` | Set a new date in `ops/config.env`, then `rm state/STOP` |
 | `SKIP guard: target reached …` | Ledger net reached `PROFIT_TARGET`; also creates `state/STOP` | Raise or disable the target (`0`), then `rm state/STOP` |
 | `SKIP guard: invalid MISSION_END` or `invalid PROFIT_TARGET` | Config typo | Use `YYYY-MM-DD` and a plain number |
+| `SKIP guard: invalid state/pause_until` | The pause file is empty or not epoch seconds | `rm state/pause_until`, or write epoch seconds, e.g. `date -d "tomorrow 17:00" +%s` |
 | `SKIP guard: ledger unreadable` | `ops/ledger.py summary` failed | Run `python3 ops/ledger.py summary` to see the error |
 | `SKIP paused until …` | Earlier usage limit or failed run | See section 3. After a limit, wait it out |
 | `SKIP daily cap` | `MAX_AI_RUNS_PER_DAY` used up (failed runs count too) | Wait for tomorrow, or raise the cap if your plan has headroom |

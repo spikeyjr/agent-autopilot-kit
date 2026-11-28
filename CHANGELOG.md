@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-28
+- Fix: a `state/pause_until` that was empty or not epoch seconds (for example a hand-written date) did not pause
+  anything: the launcher printed a shell error and started the session, and the ops tick crashed. Such a file now
+  holds the agent, logs the reason, and `ops/status.sh` shows it as INVALID. New selftest check.
+
 ## 2026-11-27
 - docs/cron-troubleshooting.md: diagnose a scheduled run from its log line (PATH, SKIP reasons, exit codes, hooks).
 - New: `ops/status.sh`, a read-only one-screen summary (stop file, pause, runs today, end date, running session,

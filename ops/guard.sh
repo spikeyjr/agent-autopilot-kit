@@ -2,6 +2,9 @@
 # Shared stop/pause checks. Exit 0 = may run, 1 = must not run (reason on stdout).
 D="$(cd "$(dirname "$0")/.." && pwd)"; source "$D/ops/config.env"
 [ -f "$D/state/STOP" ] && { echo "STOP file present"; exit 1; }
+# A pause file that is not an epoch (empty, a date string, milliseconds) holds the agent instead of being ignored.
+if [ -e "$D/state/pause_until" ] && ! [[ "$(cat "$D/state/pause_until" 2>/dev/null)" =~ ^[0-9]{1,11}$ ]]; then
+  echo "invalid state/pause_until (put epoch seconds in it, or delete it)"; exit 1; fi
 # A config typo means "do not run until fixed": it must neither run past the deadline nor create STOP.
 [ "$(date -d "$MISSION_END" +%F 2>/dev/null)" = "$MISSION_END" ] || { echo "invalid MISSION_END '$MISSION_END' (use YYYY-MM-DD)"; exit 1; }
 [[ "$PROFIT_TARGET" =~ ^-?[0-9]+(\.[0-9]+)?$ ]] || { echo "invalid PROFIT_TARGET '$PROFIT_TARGET' (plain number, 0 = disabled)"; exit 1; }
